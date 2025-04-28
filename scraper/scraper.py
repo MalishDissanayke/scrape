@@ -1,21 +1,37 @@
 import requests
 import json
-import os
 
-def fetch_and_save(url, output_file):
+def fetch_data():
+    url = "https://example.com/api/v1/sportsdata"  # Replace with actual API endpoint or URL
     response = requests.get(url)
+
     if response.status_code == 200:
-        data = response.json()
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        with open(output_file, "w") as f:
-            json.dump(data, f, indent=2)
-        print(f"Saved data to {output_file}")
+        return response.json()
     else:
         print(f"Failed to fetch data. Status code: {response.status_code}")
+        return None
 
-def main():
-    prematch_url = "https://match-storage-partners.top-parser.com/lp-feed?lang=en&service=PREMATCH&sportId=25&startCoefficient=1.01&endDate=1746028418"
-    fetch_and_save(prematch_url, "docs/prematch.json")
+def filter_data(data):
+    prematch_data = [item for item in data if item['status'] == 'prematch']
+    live_data = [item for item in data if item['status'] == 'live']
+    return prematch_data, live_data
+
+def save_data():
+    data = fetch_data()
+    
+    if data:
+        prematch_data, live_data = filter_data(data)
+
+        # Save the filtered data to files
+        with open('docs/prematch.json', 'w') as f:
+            json.dump(prematch_data, f)
+
+        with open('docs/live.json', 'w') as f:
+            json.dump(live_data, f)
+
+        print("Data saved successfully.")
+    else:
+        print("No data to save.")
 
 if __name__ == "__main__":
-    main()
+    save_data()
