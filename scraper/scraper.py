@@ -7,6 +7,7 @@ def fetch_data():
     response = requests.get(url)
     
     if response.status_code == 200:
+        print("Data fetched successfully.")
         return response.text
     else:
         print(f"Failed to fetch data. Status code: {response.status_code}")
@@ -35,16 +36,22 @@ def parse_data(html):
         else:
             live_data.append(match_data)
     
+    print(f"Prematch data: {len(prematch_data)} entries.")
+    print(f"Live data: {len(live_data)} entries.")
     return prematch_data, live_data
 
 def save_data(prematch_data, live_data):
-    with open('docs/prematch.json', 'w') as f:
-        json.dump(prematch_data, f)
+    # Check if data has changed
+    if prematch_data or live_data:
+        with open('docs/prematch.json', 'w') as f:
+            json.dump(prematch_data, f)
 
-    with open('docs/live.json', 'w') as f:
-        json.dump(live_data, f)
+        with open('docs/live.json', 'w') as f:
+            json.dump(live_data, f)
 
-    print("Data saved successfully.")
+        print("Data saved successfully.")
+    else:
+        print("No new data to save.")
 
 def main():
     html = fetch_data()
