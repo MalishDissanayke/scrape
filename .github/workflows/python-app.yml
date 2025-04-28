@@ -11,6 +11,9 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write  # Allow write access to repository contents (push changes)
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
