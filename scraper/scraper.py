@@ -1,56 +1,30 @@
+# scraper/scraper.py
+
 import json
 import asyncio
 from playwright.async_api import async_playwright
 
-async def scrape():
-    url = "https://1wywg.com/v3/3991/landing-betting-india?lang=en&bonus=hi&subid=%7Bsub1%7D&payout=%7Bamount%7D&p=zgpn&sub1=14t2n34f8hpef"
+URL = "https://1wywg.com/v3/3991/landing-betting-india?lang=en&bonus=hi&subid=%7Bsub1%7D&payout=%7Bamount%7D&p=zgpn&sub1=14t2n34f8hpef"
 
+async def scrape():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
-        await page.goto(url, wait_until="networkidle")
+        await page.goto(URL, wait_until='networkidle')
 
-        prematch_data = []
-        live_data = []
+        # Grab prematch
+        prematch = await page.locator('div:has-text("Prematch")').all_inner_texts()
 
-        # These selectors depend on real inspection
-        prematch_selector = 'div[class*="prematch"] table'
-        live_selector = 'div[class*="live"] table'
+        # Grab live
+        live = await page.locator('div:has-text("Live")').all_inner_texts()
 
-        try:
-            prematch_table = await page.query_selector(prematch_selector)
-            if prematch_table:
-                rows = await prematch_table.query_selector_all('tr')
-                for row in rows[1:]:  # Skip header
-                    cols = await row.query_selector_all('td')
-                    data = [await col.inner_text() for col in cols]
-                    prematch_data.append(data)
+        with open('docs/prematch.json', 'w', encoding='utf-8') as f:
+            json.dump(prematch, f, ensure_ascii=False, indent=2)
 
-        except Exception as e:
-            print("Prematch table not found:", e)
-
-        try:
-            live_table = await page.query_selector(live_selector)
-            if live_table:
-                rows = await live_table.query_selector_all('tr')
-                for row in rows[1:]:  # Skip header
-                    cols = await row.query_selector_all('td')
-                    data = [await col.inner_text() for col in cols]
-                    live_data.append(data)
-
-        except Exception as e:
-            print("Live match table not found:", e)
+        with open('docs/live.json', 'w', encoding='utf-8') as f:
+            json.dump(live, f, ensure_ascii=False, indent=2)
 
         await browser.close()
-
-        # Save to JSON inside docs/
-        with open('docs/prematch.json', 'w') as f:
-            json.dump(prematch_data, f, indent=4)
-
-        with open('docs/live.json', 'w') as f:
-            json.dump(live_data, f, indent=4)
-
-        print("Scraping complete.")
 
 if __name__ == "__main__":
     asyncio.run(scrape())
